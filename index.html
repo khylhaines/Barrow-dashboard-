@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BQ Control">
+<title>BQ CONTROL</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0d0f14;
+  --surface:  #131720;
+  --card:     #191e2b;
+  --border:   #1e2840;
+  --teal:     #00d4c8;
+  --teal-dim: #00897f;
+  --purple:   #8b5cf6;
+  --purp-dim: #5b21b6;
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --green:    #22c55e;
+  --blue:     #60a5fa;
+  --text:     #e2e8f0;
+  --muted:    #64748b;
+  --nav-h:    64px;
+  --head-h:   52px;
+  --font-h:   'Exo 2', sans-serif;
+  --font-m:   'Share Tech Mono', monospace;
+  --font-u:   'Rajdhani', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--font-u); }
+
+/* ── HEADER ── */
+.header {
+  position:fixed; top:0; left:0; right:0; height:var(--head-h);
+  background:var(--surface); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 16px; z-index:200;
+}
+.header-logo { font-family:var(--font-h); font-size:16px; font-weight:800; letter-spacing:3px; color:var(--teal); }
+.header-sub  { font-family:var(--font-m); font-size:10px; color:var(--muted); }
+.header-right { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+.clock { font-family:var(--font-m); font-size:14px; color:var(--teal); }
+.sys-live { display:flex; align-items:center; gap:5px; font-family:var(--font-m); font-size:10px; color:var(--muted); }
+.pulse { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── SCROLL AREA ── */
+.scroll-area {
+  position:fixed;
+  top:var(--head-h); left:0; right:0;
+  bottom:var(--nav-h);
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:14px 14px 20px;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position:fixed; bottom:0; left:0; right:0; height:var(--nav-h);
+  background:var(--surface); border-top:1px solid var(--border);
+  display:flex; align-items:stretch; z-index:200;
+}
+.nav-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; cursor:pointer; border:none; background:transparent;
+  font-family:var(--font-u); font-size:10px; font-weight:700;
+  letter-spacing:0.5px; text-transform:uppercase; color:var(--muted);
+  transition:color 0.2s; position:relative;
+}
+.nav-btn .nav-icon { font-size:20px; line-height:1; }
+.nav-btn.active { color:var(--teal); }
+.nav-btn.active::before {
+  content:''; position:absolute; top:0; left:20%; right:20%; height:2px;
+  background:var(--teal); border-radius:0 0 3px 3px;
+}
+
+/* ── PAGE ── */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── CARD ── */
+.card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:10px; padding:16px; margin-bottom:12px;
+  position:relative; overflow:hidden;
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,var(--teal),transparent); opacity:0.35;
+}
+.card-title {
+  font-family:var(--font-m); font-size:10px; letter-spacing:2px;
+  text-transform:uppercase; color:var(--muted); margin-bottom:10px;
+}
+.sec-title {
+  font-family:var(--font-h); font-size:12px; font-weight:800;
+  letter-spacing:2px; text-transform:uppercase; color:var(--text);
+  display:flex; align-items:center; gap:8px; margin-bottom:14px;
+}
+.sec-title::before { content:''; width:3px; height:14px; background:var(--teal); border-radius:2px; flex-shrink:0; }
+
+/* ── STAT ── */
+.stat-num { font-family:var(--font-h); font-weight:800; line-height:1; }
+.stat-lbl { font-size:12px; color:var(--muted); margin-top:3px; }
+.stat-d   { font-family:var(--font-m); font-size:11px; margin-top:5px; color:var(--green); }
+
+/* ── GRID ── */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.g2 .card { margin-bottom:0; }
+
+/* ── BADGE ── */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 9px; border-radius:20px;
+  font-family:var(--font-m); font-size:10px; font-weight:600; letter-spacing:0.5px;
+}
+.b-green  { background:rgba(34,197,94,.12); color:var(--green); border:1px solid rgba(34,197,94,.3); }
+.b-red    { background:rgba(239,68,68,.12); color:var(--red);   border:1px solid rgba(239,68,68,.3); }
+.b-amber  { background:rgba(245,158,11,.12); color:var(--amber); border:1px solid rgba(245,158,11,.3); }
+.b-teal   { background:rgba(0,212,200,.1);  color:var(--teal);  border:1px solid rgba(0,212,200,.25); }
+.b-dot    { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+/* ── BUTTONS ── */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  padding:11px 18px; border-radius:7px; border:none; cursor:pointer;
+  font-family:var(--font-u); font-size:14px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase; transition:all .18s;
+  white-space:nowrap;
+}
+.btn-teal   { background:var(--teal); color:#0a1a19; }
+.btn-teal:active { background:#00fff5; }
+.btn-purple { background:var(--purple); color:#fff; }
+.btn-purple:active { background:#a78bfa; }
+.btn-red    { background:var(--red); color:#fff; }
+.btn-out    { background:transparent; border:1px solid var(--border); color:var(--muted); }
+.btn-out:active { border-color:var(--teal); color:var(--teal); }
+.btn-sm     { padding:7px 13px; font-size:12px; }
+.btn-block  { width:100%; margin-bottom:8px; }
+.btn-row    { display:flex; gap:8px; flex-wrap:wrap; }
+
+/* ── PROGRESS ── */
+.prog-wrap { margin-bottom:12px; }
+.prog-lbl  { display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; }
+.prog-lbl span:last-child { font-family:var(--font-m); color:var(--teal); font-size:11px; }
+.prog-bar  { height:5px; background:var(--border); border-radius:3px; overflow:visible; }
+.prog-fill {
+  height:100%; border-radius:3px;
+  background:linear-gradient(90deg,var(--teal-dim),var(--teal));
+  position:relative; transition:width 1s ease;
+}
+.prog-fill::after {
+  content:''; position:absolute; right:-2px; top:-3px;
+  width:11px; height:11px; background:var(--teal);
+  border-radius:50%; box-shadow:0 0 8px var(--teal);
+}
+
+/* ── LOG FEED ── */
+.log-feed {
+  background:#0a0c12; border:1px solid var(--border);
+  border-radius:7px; height:200px; overflow-y:auto;
+  padding:10px; font-family:var(--font-m); font-size:11px; line-height:1.9;
+}
+.log-feed::-webkit-scrollbar { width:3px; }
+.log-feed::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.log-line { display:grid; grid-template-columns:62px 76px 1fr; gap:6px; word-break:break-word; }
+.lt { color:var(--muted); }
+.lb { }
+.lb.research { color:var(--teal); }
+.lb.history  { color:var(--purple); }
+.lb.safety   { color:var(--amber); }
+.lb.local    { color:var(--blue); }
+.lb.planning { color:#f472b6; }
+.lb.family   { color:var(--green); }
+.lb.social   { color:#fb923c; }
+.lm { color:#94a3b8; }
+.lm.hi { color:var(--text); }
+
+/* ── BOT CARD ── */
+.bot-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:10px; padding:14px; margin-bottom:10px;
+}
+.bot-card.on { border-color:var(--teal-dim); }
+.bot-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.bot-left { display:flex; align-items:center; gap:10px; }
+.bot-ava  {
+  width:38px; height:38px; border-radius:8px;
+  background:rgba(0,212,200,.07); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.bot-name { font-family:var(--font-h); font-size:14px; font-weight:800; }
+.bot-role { font-size:11px; color:var(--muted); }
+.bot-task {
+  font-family:var(--font-m); font-size:11px; color:var(--muted);
+  padding:8px 0; border-top:1px solid var(--border); margin-bottom:10px;
+  word-break:break-word;
+}
+.bot-acts { display:flex; gap:6px; }
+
+/* ── CHAT ── */
+.chat-win {
+  background:#0a0c12; border:1px solid var(--border);
+  border-radius:8px; height:320px; overflow-y:auto;
+  padding:14px; display:flex; flex-direction:column; gap:14px;
+  margin-bottom:12px;
+}
+.cmsg { display:flex; gap:10px; }
+.cmsg.u { flex-direction:row-reverse; }
+.cava {
+  width:30px; height:30px; border-radius:7px;
+  background:var(--card); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; flex-shrink:0;
+}
+.cbub {
+  padding:9px 13px; border-radius:8px;
+  font-size:13px; line-height:1.6; max-width:82%;
+}
+.cmsg.a .cbub { background:var(--card); border:1px solid var(--border); }
+.cmsg.u .cbub { background:rgba(0,212,200,.1); border:1px solid rgba(0,212,200,.2); }
+.csrc {
+  font-family:var(--font-m); font-size:10px; color:var(--muted);
+  margin-top:5px; padding:3px 8px;
+  background:rgba(255,255,255,.03); border-radius:4px;
+  border:1px solid var(--border);
+}
+.chat-row { display:flex; gap:8px; margin-bottom:10px; }
+.chat-in {
+  flex:1; background:var(--card); border:1px solid var(--border);
+  border-radius:7px; padding:11px 14px; color:var(--text);
+  font-family:var(--font-u); font-size:14px; outline:none;
+}
+.chat-in:focus { border-color:var(--teal); }
+.chat-in::placeholder { color:var(--muted); }
+.quick-wrap { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px; }
+.qbtn {
+  background:rgba(0,212,200,.07); border:1px solid rgba(0,212,200,.2);
+  border-radius:20px; padding:5px 12px; color:var(--teal);
+  font-family:var(--font-u); font-size:11px; font-weight:600;
+  cursor:pointer; white-space:nowrap;
+}
+.qbtn:active { background:rgba(0,212,200,.18); }
+
+/* typing */
+.typing { display:flex; gap:4px; align-items:center; padding:9px 13px; }
+.typing span {
+  width:6px; height:6px; background:var(--muted);
+  border-radius:50%; animation:bnc 1.2s infinite;
+}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bnc{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+
+/* ── GRAPH ── */
+.g-bars { display:flex; align-items:flex-end; gap:5px; height:80px; padding:0 2px; }
+.g-bar  {
+  flex:1; background:linear-gradient(180deg,var(--teal),var(--teal-dim));
+  border-radius:3px 3px 0 0; min-height:4px;
+}
+.g-bar.hi { background:linear-gradient(180deg,var(--purple),var(--purp-dim)); }
+.g-lbls { display:flex; gap:5px; padding:4px 2px 0; }
+.g-lbl  { flex:1; text-align:center; font-family:var(--font-m); font-size:9px; color:var(--muted); }
+
+/* ── CANVAS WEB ── */
+#memCvs { width:100%; border-radius:6px; display:block; }
+
+/* ── SETTINGS ── */
+.field { margin-bottom:16px; }
+.f-lbl { font-family:var(--font-m); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.f-inp {
+  width:100%; background:#0a0c12; border:1px solid var(--border);
+  border-radius:6px; padding:10px 13px; color:var(--text);
+  font-family:var(--font-m); font-size:13px; outline:none;
+}
+.f-inp:focus { border-color:var(--teal); }
+.divider { height:1px; background:var(--border); margin:18px 0; }
+
+/* ── MONEY ── */
+.money-big { font-family:var(--font-h); font-size:44px; font-weight:800; color:var(--teal); line-height:1; }
+
+/* ── TOAST ── */
+.toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  background:var(--teal); color:#0a1a19;
+  padding:10px 22px; border-radius:8px;
+  font-family:var(--font-u); font-size:14px; font-weight:700;
+  z-index:999; animation:tin .2s ease;
+  white-space:nowrap;
+}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── REVENUE TABLE ── */
+.rev-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); font-size:13px; }
+.rev-row:last-child { border-bottom:none; }
+.rev-name { font-weight:600; }
+.rev-amt  { font-family:var(--font-m); color:var(--teal); }
+
+/* system info rows */
+.info-row { display:flex; justify-content:space-between; font-family:var(--font-m); font-size:12px; padding:5px 0; color:var(--muted); border-bottom:1px solid var(--border); }
+.info-row:last-child { border-bottom:none; }
+.info-row span:last-child { color:var(--text); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-logo">BQ CONTROL</div>
+    <div class="header-sub">BARROW INTELLIGENCE</div>
+  </div>
+  <div class="header-right">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="sys-live"><span class="pulse"></span>SYSTEM LIVE</div>
+  </div>
+</div>
+
+<!-- SCROLL AREA -->
+<div class="scroll-area" id="scrollArea">
+
+  <!-- ══ BRAIN ══ -->
+  <div class="page active" id="page-brain">
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Total Facts</div>
+        <div class="stat-num" style="font-size:36px;color:var(--teal)" id="sFacts">2,847</div>
+        <div class="stat-lbl">knowledge records</div>
+        <div class="stat-d">▲ +34 today</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Places Mapped</div>
+        <div class="stat-num" style="font-size:36px;color:var(--purple)">312</div>
+        <div class="stat-lbl">locations indexed</div>
+        <div class="stat-d">▲ +7 today</div>
+      </div>
+      <div class="card">
+        <div class="card-title">People Records</div>
+        <div class="stat-num" style="font-size:36px;color:var(--amber)">891</div>
+        <div class="stat-lbl">historical figures</div>
+        <div class="stat-d">▲ +12 today</div>
+      </div>
+      <div class="card">
+        <div class="card-title">History Events</div>
+        <div class="stat-num" style="font-size:36px;color:var(--blue)">1,644</div>
+        <div class="stat-lbl">timeline entries</div>
+        <div class="stat-d">▲ +5 today</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="sec-title" style="margin-bottom:0">Research Control</div>
+        <div class="badge b-green" id="brainBadge"><span class="b-dot"></span>ACTIVE</div>
+      </div>
+      <button class="btn btn-teal btn-block" onclick="startResearch()">▶ Start Research</button>
+      <div class="btn-row">
+        <button class="btn btn-out btn-sm" style="flex:1" onclick="stopResearch()">⏹ Stop</button>
+        <button class="btn btn-purple btn-sm" style="flex:1" onclick="researchForever()">∞ Forever</button>
+      </div>
+      <div style="margin-top:14px">
+        <div class="prog-wrap">
+          <div class="prog-lbl"><span>Crawl depth</span><span id="crawlPct">67%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:67%"></div></div>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-lbl"><span>Memory usage</span><span>34 MB</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:34%"></div></div>
+        </div>
+        <div class="prog-wrap" style="margin-bottom:0">
+          <div class="prog-lbl"><span>Indexing queue</span><span>14 pending</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:55%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="sec-title" style="margin-bottom:0">Live Learning Feed</div>
+        <button class="btn btn-out btn-sm" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="log-feed" id="liveFeed"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Memory Web — tap a node</div>
+      <canvas id="memCvs" height="260"></canvas>
+      <div id="nodeInfo" style="margin-top:10px;font-family:var(--font-m);font-size:11px;color:var(--muted);min-height:18px"></div>
+    </div>
+
+  </div><!-- /brain -->
+
+
+  <!-- ══ BOTS ══ -->
+  <div class="page" id="page-bots">
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">Online</div>
+        <div class="stat-num" style="font-size:32px;color:var(--green)" id="botsOn">5</div>
+        <div class="stat-lbl">bots active</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Tasks Today</div>
+        <div class="stat-num" style="font-size:32px;color:var(--teal)">847</div>
+        <div class="stat-lbl">completed</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title" style="margin-bottom:8px">Activity Log</div>
+      <div class="log-feed" id="botLog" style="height:140px"></div>
+    </div>
+
+    <div id="botGrid"></div>
+
+  </div><!-- /bots -->
+
+
+  <!-- ══ MONEY ══ -->
+  <div class="page" id="page-money">
+
+    <div class="card">
+      <div class="card-title">All-Time Earnings</div>
+      <div class="money-big">£4,217.50</div>
+      <div class="stat-lbl" style="margin-top:6px">since launch · 14 Apr 2025</div>
+    </div>
+
+    <div class="g2">
+      <div class="card">
+        <div class="card-title">This Month</div>
+        <div class="stat-num" style="font-size:28px;color:var(--teal)">£842.00</div>
+        <div class="stat-d">▲ 14% vs last month</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Today</div>
+        <div class="stat-num" style="font-size:28px;color:var(--green)">£142.50</div>
+        <div class="stat-d">▲ Best day this week</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Weekly Revenue</div>
+      <div class="g-bars" id="weekBars"></div>
+      <div class="g-lbls" id="weekLbls"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Revenue Streams</div>
+      <div id="revStreams"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Breakdown</div>
+      <div id="revBreak"></div>
+    </div>
+
+  </div><!-- /money -->
+
+
+  <!-- ══ TEST IT ══ -->
+  <div class="page" id="page-test">
+
+    <div class="card">
+      <div class="sec-title">Ask The Brain</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Any address, person, place or history in Barrow.</div>
+      <div class="chat-win" id="chatWin">
+        <div class="cmsg a">
+          <div class="cava">🧠</div>
+          <div>
+            <div class="cbub">Hello Khyl. Ask me anything about Barrow-in-Furness — addresses, people, history, buildings. I'll show you exactly where every fact came from.</div>
+            <div class="csrc">SOURCE: system · confidence 100%</div>
+          </div>
+        </div>
+      </div>
+      <div class="quick-wrap" id="quickWrap"></div>
+      <div class="chat-row">
+        <input class="chat-in" id="chatIn" placeholder="e.g. 196 Marsh Street…" onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="btn btn-teal btn-sm" onclick="sendChat()">▶</button>
+      </div>
+    </div>
+
+  </div><!-- /test -->
+
+
+  <!-- ══ SETTINGS ══ -->
+  <div class="page" id="page-settings">
+
+    <div class="card">
+      <div class="sec-title">API Keys</div>
+      <div class="field">
+        <div class="f-lbl">Anthropic API Key (Old Tom / Brain)</div>
+        <input class="f-inp" type="password" placeholder="sk-ant-…" id="anthropicKey"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Supabase URL</div>
+        <input class="f-inp" type="text" placeholder="https://xxx.supabase.co"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Supabase Anon Key</div>
+        <input class="f-inp" type="password" placeholder="eyJ…"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Firebase Config JSON</div>
+        <textarea class="f-inp" rows="3" placeholder='{"apiKey":"…"}'></textarea>
+      </div>
+      <button class="btn btn-teal btn-block" onclick="saveSettings()">💾 Save API Keys</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Earnings Accounts</div>
+      <div class="field">
+        <div class="f-lbl">PayPal Email</div>
+        <input class="f-inp" type="email" placeholder="your@email.com"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Stripe Secret Key</div>
+        <input class="f-inp" type="password" placeholder="sk_live_…"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Amazon Affiliate ID</div>
+        <input class="f-inp" type="text" placeholder="barrowquest-21"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Google AdSense ID</div>
+        <input class="f-inp" type="text" placeholder="pub-xxxxxxxxxxxxxxxx"/>
+      </div>
+      <button class="btn btn-purple btn-block" onclick="saveSettings()">💾 Save Accounts</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Social Accounts</div>
+      <div class="field">
+        <div class="f-lbl">Twitter / X Handle</div>
+        <input class="f-inp" type="text" placeholder="@barrowquest"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Facebook Page ID</div>
+        <input class="f-inp" type="text" placeholder="barrowquest"/>
+      </div>
+      <button class="btn btn-out btn-block" onclick="saveSettings()">Save Social</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">System Info</div>
+      <div class="info-row"><span>Dashboard</span><span>v2.0 — Mobile</span></div>
+      <div class="info-row"><span>Node.js</span><span>v20.11.0</span></div>
+      <div class="info-row"><span>Brain last trained</span><span>Today 09:14</span></div>
+      <div class="info-row"><span>DB size</span><span>247 MB</span></div>
+      <div class="info-row"><span>Uptime</span><span id="uptime" style="color:var(--green)">00:00:00</span></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Research Settings</div>
+      <div class="field">
+        <div class="f-lbl">Crawl speed (req/min)</div>
+        <input class="f-inp" type="number" value="30"/>
+      </div>
+      <div class="field">
+        <div class="f-lbl">Max memory (MB)</div>
+        <input class="f-inp" type="number" value="512"/>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <div class="f-lbl">Auto-start on load</div>
+        <select class="f-inp">
+          <option>Yes — resume automatically</option>
+          <option>No — wait for manual start</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <button class="btn btn-red btn-sm" onclick="if(confirm('Reset ALL data? This cannot be undone.'))toast('Reset aborted — wire to your backend.')">⚠ Factory Reset</button>
+    </div>
+
+  </div><!-- /settings -->
+
+</div><!-- /scroll-area -->
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-brain" onclick="go('brain',this)">
+    <span class="nav-icon">🧠</span>Brain
+  </button>
+  <button class="nav-btn" id="nav-bots" onclick="go('bots',this)">
+    <span class="nav-icon">🤖</span>Bots
+  </button>
+  <button class="nav-btn" id="nav-money" onclick="go('money',this)">
+    <span class="nav-icon">💰</span>Earnings
+  </button>
+  <button class="nav-btn" id="nav-test" onclick="go('test',this)">
+    <span class="nav-icon">❓</span>Ask It
+  </button>
+  <button class="nav-btn" id="nav-settings" onclick="go('settings',this)">
+    <span class="nav-icon">⚙️</span>Settings
+  </button>
+</nav>
+
+<script>
+// ── CLOCK & UPTIME ──
+function updateClock(){
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock,1000); updateClock();
+const t0=Date.now();
+setInterval(()=>{
+  const s=Math.floor((Date.now()-t0)/1000);
+  const el=document.getElementById('uptime');
+  if(el) el.textContent=`${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+},1000);
+
+// ── NAVIGATION ──
+function go(name, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('scrollArea').scrollTop=0;
+  if(name==='money') buildMoney();
+}
+
+// ── LIVE FEED ──
+const MSGS=[
+  {b:'RESEARCH',c:'research',m:['Crawling Barrow Council archive…','Found: Devonshire Dock Hall 1986','Indexing: Vickers workers list 1942','New fact: Buccleuch Dock built 1847','Cross-ref: Barrow Island 1901 census']},
+  {b:'HISTORY', c:'history', m:['Verifying: HMS Dreadnought launch 1906','Linking: Sir James Ramsden record','Geocoding: Old Market Street boundary','Matched photo: Barrow docks 1920s','Confidence updated: 94%']},
+  {b:'LOCAL',   c:'local',   m:['Business updated: Furness Railway pub','New address: 12 Abbey Road','Postcode mapped: LA14 2LD → Abbey quarter','Hours verified: Abbey Road shops']},
+  {b:'SAFETY',  c:'safety',  m:['Content scan complete — no flags','Moderation pass: 47 records OK','Age filter applied to quiz content']},
+  {b:'PLANNING',c:'planning',m:['Route optimised: 6-stop walk 2.1km','Event: Barrow AFC match Sat 14:00','Seasonal flag: summer holidays added']},
+  {b:'FAMILY',  c:'family',  m:['Parent alert: 2 children active','Family trail updated: Abbey route','Age 8-12 content batch processed']},
+  {b:'SOCIAL',  c:'social',  m:['Facebook post queued: history fact','Instagram caption generated','Affiliate link embedded: Cumbria tourism']},
+];
+let feedOn=false, feedInt=null;
+function addLine(b,c,m,feedId='liveFeed'){
+  const feed=document.getElementById(feedId); if(!feed)return;
+  const t=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const d=document.createElement('div'); d.className='log-line';
+  d.innerHTML=`<span class="lt">${t}</span><span class="lb ${c}">[${b}]</span><span class="lm hi">${m}</span>`;
+  feed.appendChild(d); feed.scrollTop=feed.scrollHeight;
+  // mirror to bot log
+  if(feedId==='liveFeed'){
+    const bl=document.getElementById('botLog');
+    if(bl){const d2=d.cloneNode(true);bl.appendChild(d2);bl.scrollTop=bl.scrollHeight;}
+  }
+}
+function startFeed(){
+  if(feedOn)return; feedOn=true;
+  feedInt=setInterval(()=>{
+    const g=MSGS[Math.floor(Math.random()*MSGS.length)];
+    addLine(g.b,g.c,g.m[Math.floor(Math.random()*g.m.length)]);
+    const el=document.getElementById('sFacts');
+    if(el&&Math.random()>.65) el.textContent=(parseInt(el.textContent.replace(',',''))+1).toLocaleString();
+  },1800);
+}
+function stopFeed(){ feedOn=false; clearInterval(feedInt); }
+function clearLog(){ const f=document.getElementById('liveFeed'); if(f)f.innerHTML=''; }
+function startResearch(){
+  setBadge('b-green','● ACTIVE');
+  startFeed();
+  addLine('SYSTEM','research','▶ Research started by operator');
+}
+function stopResearch(){
+  setBadge('b-amber','● PAUSED');
+  stopFeed();
+  addLine('SYSTEM','safety','⏹ Research paused');
+}
+function researchForever(){
+  setBadge('b-teal','∞ FOREVER');
+  startFeed();
+  addLine('SYSTEM','research','∞ Forever mode — continuous learning ON');
+}
+function setBadge(cls,txt){
+  const b=document.getElementById('brainBadge');
+  b.className='badge '+cls; b.innerHTML=`<span class="b-dot"></span>${txt}`;
+}
+setTimeout(startFeed,600);
+
+// ── MEMORY WEB ──
+const NODES=[
+  {l:'Barrow',   x:.5,  y:.48, r:20, col:'#00d4c8', f:'Central hub — 2,847 total facts'},
+  {l:'Vickers',  x:.22, y:.18, r:14, col:'#00d4c8', f:'Vickers Shipyard — 312 records'},
+  {l:'Abbey',    x:.76, y:.18, r:13, col:'#00d4c8', f:'Furness Abbey — 204 records'},
+  {l:'Docks',    x:.12, y:.52, r:13, col:'#00d4c8', f:'Barrow Docks — 178 records'},
+  {l:'Ramsden',  x:.82, y:.58, r:12, col:'#f59e0b', f:'Sir James Ramsden — 89 facts'},
+  {l:'1906',     x:.35, y:.82, r:11, col:'#60a5fa', f:'HMS Dreadnought launch — 67 refs'},
+  {l:'Market St',x:.62, y:.82, r:10, col:'#00d4c8', f:'Old Market Street — 54 records'},
+  {l:'WW2',      x:.1,  y:.28, r:12, col:'#60a5fa', f:'WWII production — 143 facts'},
+  {l:'Schneider',x:.88, y:.35, r:9,  col:'#f59e0b', f:'Schneider family — 44 facts'},
+  {l:'Barrow Is',x:.5,  y:.12, r:11, col:'#00d4c8', f:'Barrow Island — 97 records'},
+  {l:'1847',     x:.28, y:.68, r:9,  col:'#60a5fa', f:'Town founding — 55 refs'},
+];
+const EDGES=[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[0,9],[0,10],[1,7],[1,5],[2,8],[3,10],[4,1],[4,9],[5,1],[7,3],[9,1]];
+let cvs,ctx2,CW,CH,ph=0;
+function initCvs(){
+  cvs=document.getElementById('memCvs'); if(!cvs)return;
+  CW=cvs.offsetWidth; CH=260; cvs.width=CW; cvs.height=CH;
+  ctx2=cvs.getContext('2d');
+  cvs.addEventListener('click',e=>{
+    const r=cvs.getBoundingClientRect();
+    const mx=(e.clientX-r.left)*(CW/r.width), my=(e.clientY-r.top)*(CH/r.height);
+    NODES.forEach(n=>{
+      if(Math.hypot(mx-n.x*CW, my-n.y*CH)<n.r+5)
+        document.getElementById('nodeInfo').innerHTML=`<span style="color:var(--teal)">▶ ${n.l}</span>  ${n.f}`;
+    });
+  });
+  animCvs();
+}
+function drawCvs(){
+  if(!ctx2)return;
+  ctx2.clearRect(0,0,CW,CH);
+  ctx2.fillStyle='#0a0c12'; ctx2.fillRect(0,0,CW,CH);
+  EDGES.forEach(([a,b])=>{
+    ctx2.beginPath();
+    ctx2.moveTo(NODES[a].x*CW,NODES[a].y*CH);
+    ctx2.lineTo(NODES[b].x*CW,NODES[b].y*CH);
+    ctx2.strokeStyle='rgba(0,212,200,.1)'; ctx2.lineWidth=1; ctx2.stroke();
+  });
+  NODES.forEach(n=>{
+    const px=n.x*CW, py=n.y*CH;
+    const g=ctx2.createRadialGradient(px,py,0,px,py,n.r*2.2);
+    g.addColorStop(0,n.col+'35'); g.addColorStop(1,'transparent');
+    ctx2.fillStyle=g; ctx2.beginPath(); ctx2.arc(px,py,n.r*2.2,0,Math.PI*2); ctx2.fill();
+    ctx2.beginPath(); ctx2.arc(px,py,n.r,0,Math.PI*2);
+    ctx2.fillStyle=n.col+'18'; ctx2.fill();
+    ctx2.strokeStyle=n.col; ctx2.lineWidth=1.5; ctx2.stroke();
+    ctx2.fillStyle='#e2e8f0';
+    ctx2.font=`500 ${Math.max(8,n.r*.65)}px 'Share Tech Mono'`;
+    ctx2.textAlign='center'; ctx2.textBaseline='middle';
+    ctx2.fillText(n.l,px,py);
+  });
+}
+function animCvs(){
+  ph+=.035; drawCvs();
+  const n=NODES[0], px=n.x*CW, py=n.y*CH, r=n.r+Math.sin(ph)*2.5;
+  ctx2.beginPath(); ctx2.arc(px,py,r,0,Math.PI*2);
+  ctx2.strokeStyle=`rgba(0,212,200,${.25+.15*Math.sin(ph)})`;
+  ctx2.lineWidth=2; ctx2.stroke();
+  requestAnimationFrame(animCvs);
+}
+window.addEventListener('load',()=>setTimeout(initCvs,300));
+window.addEventListener('resize',()=>{if(cvs){CW=cvs.offsetWidth;cvs.width=CW;}});
+
+// ── BOTS ──
+const BOTS=[
+  {n:'Safety Bot',   k:'safety',   i:'🛡️', r:'Content moderation',  on:true,  t:'Running daily content scan…'},
+  {n:'History Bot',  k:'history',  i:'📜', r:'Historical research',  on:true,  t:'Cross-referencing 1901 census…'},
+  {n:'LocalExpert',  k:'local',    i:'📍', r:'Places & addresses',   on:true,  t:'Geocoding new postcodes…'},
+  {n:'Planning Bot', k:'planning', i:'🗺️', r:'Quest route builder',  on:false, t:'Idle'},
+  {n:'Research Bot', k:'research', i:'🔬', r:'Web crawler',          on:true,  t:'Crawling council archives…'},
+  {n:'Family Bot',   k:'family',   i:'👨‍👩‍👧', r:'Family content',      on:true,  t:'Processing age batches…'},
+  {n:'Social Bot',   k:'social',   i:'📣', r:'Social media',         on:false, t:'Idle'},
+];
+function buildBots(){
+  const g=document.getElementById('botGrid'); if(!g)return;
+  BOTS.forEach(b=>{
+    const d=document.createElement('div');
+    d.className='bot-card'+(b.on?' on':''); d.id='bc-'+b.k;
+    d.innerHTML=`
+      <div class="bot-head">
+        <div class="bot-left">
+          <div class="bot-ava">${b.i}</div>
+          <div><div class="bot-name">${b.n}</div><div class="bot-role">${b.r}</div></div>
+        </div>
+        <div class="badge ${b.on?'b-green':'b-red'}" id="bb-${b.k}"><span class="b-dot"></span>${b.on?'ON':'OFF'}</div>
+      </div>
+      <div class="bot-task" id="bt-${b.k}">⚡ ${b.t}</div>
+      <div class="bot-acts">
+        <button class="btn btn-teal btn-sm" onclick="botAct('${b.k}','start')">▶ Start</button>
+        <button class="btn btn-out btn-sm" onclick="botAct('${b.k}','stop')">⏹ Stop</button>
+        <button class="btn btn-purple btn-sm" onclick="botAct('${b.k}','restart')">↺</button>
+      </div>`;
+    g.appendChild(d);
+  });
+}
+buildBots();
+function botAct(k,a){
+  const bd=document.getElementById('bb-'+k), bt=document.getElementById('bt-'+k), bc=document.getElementById('bc-'+k);
+  if(a==='start'){
+    bd.className='badge b-green'; bd.innerHTML='<span class="b-dot"></span>ON';
+    bt.textContent='⚡ Resuming…'; bc.classList.add('on');
+    addLine(k.toUpperCase(),k,'Bot started by operator','liveFeed');
+  } else if(a==='stop'){
+    bd.className='badge b-red'; bd.innerHTML='<span class="b-dot"></span>OFF';
+    bt.textContent='— Idle'; bc.classList.remove('on');
+    addLine(k.toUpperCase(),k,'Bot stopped by operator','liveFeed');
+  } else {
+    bd.className='badge b-amber'; bd.innerHTML='<span class="b-dot"></span>RESTART';
+    bt.textContent='⏳ Restarting…';
+    setTimeout(()=>{
+      bd.className='badge b-green'; bd.innerHTML='<span class="b-dot"></span>ON';
+      bt.textContent='⚡ Running…'; bc.classList.add('on');
+    },2000);
+    addLine(k.toUpperCase(),k,'Bot restarted by operator','liveFeed');
+  }
+}
+
+// ── MONEY ──
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const WV=[68,95,112,87,134,142,128];
+const RS=[
+  {n:'Business Listings', a:1840.00, d:'+12%', c:'var(--teal)'},
+  {n:'Affiliate Links',   a:1220.50, d:'+8%',  c:'var(--purple)'},
+  {n:'Subscriptions',     a:780.00,  d:'+22%', c:'var(--amber)'},
+  {n:'Council Licenses',  a:377.00,  d:'NEW',  c:'var(--blue)'},
+];
+let moneyBuilt=false;
+function buildMoney(){
+  if(moneyBuilt)return; moneyBuilt=true;
+  const gb=document.getElementById('weekBars'), gl=document.getElementById('weekLbls');
+  const mx=Math.max(...WV);
+  WV.forEach((v,i)=>{
+    const b=document.createElement('div'); b.className='g-bar'+(i===5?' hi':'');
+    b.style.height=(v/mx*72+6)+'px'; gb.appendChild(b);
+    const l=document.createElement('div'); l.className='g-lbl'; l.textContent=WD[i]; gl.appendChild(l);
+  });
+  const rs=document.getElementById('revStreams');
+  RS.forEach(s=>{
+    rs.innerHTML+=`<div class="rev-row"><span class="rev-name" style="color:${s.c}">${s.n}</span><div style="display:flex;align-items:center;gap:10px"><span class="rev-amt">£${s.a.toFixed(2)}</span><span class="badge b-green">${s.d}</span></div></div>`;
+  });
+  const rb=document.getElementById('revBreak');
+  const tot=RS.reduce((a,s)=>a+s.a,0);
+  RS.forEach(s=>{
+    const pct=(s.a/tot*100).toFixed(1);
+    rb.innerHTML+=`
+      <div class="prog-wrap">
+        <div class="prog-lbl"><span>${s.n}</span><span style="color:${s.c}">${pct}%</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:linear-gradient(90deg,${s.c}88,${s.c})"></div></div>
+      </div>`;
+  });
+}
+
+// ── CHAT ──
+const KB={
+  'marsh street':{a:"Marsh Street is one of Barrow's oldest residential roads running through the Barrow Island area. Several Vickers shipyard workers lived here in the early 1900s. Census records from 1901 show 12 households at numbers 190-210, primarily ironworkers and their families.",s:'Census 1901 · Archive ref BRW-042'},
+  'ramsden':{a:"Sir James Ramsden (1822–1896) was Barrow's first Mayor and the driving force behind the town's rapid expansion. He served as general manager of the Furness Railway and was instrumental in establishing the steelworks and docks that built modern Barrow.",s:'Borough records · DNB biography'},
+  'furness abbey':{a:"Furness Abbey was founded in 1123 by Stephen, later King of England. It became one of the wealthiest Cistercian monasteries in northern England before dissolution in 1537 under Henry VIII. The ruins are now managed by English Heritage.",s:'English Heritage · Historic England ref 1015736'},
+  'barrow':{a:"Barrow-in-Furness was incorporated as a Municipal Borough in 1867. Rapid industrial growth began around 1846-47 with the Furness Railway, which opened up iron ore transport from local mines and transformed a small fishing village into a major industrial town.",s:'Borough Charter 1867 · Furness Railway history'},
+  'dreadnought':{a:"HMS Dreadnought was launched at the Vickers Sons & Maxim yard in Barrow on 10 February 1906. She revolutionised naval warfare and gave her name to a class of battleships. Construction employed over 3,000 Barrow workers and took 366 days from keel-laying to commissioning.",s:'Vickers shipyard records · Naval History Branch'},
+  'dock':{a:"Barrow's dock system was built between 1847 and 1879. Buccleuch Dock (1847) came first, then Devonshire Dock (1867) and Ramsden Dock (1879). The deep-water facilities made Barrow a major steel export hub and later the home of British submarine construction.",s:'Port of Barrow records · Cumbria Archive'},
+};
+function getAns(q){
+  const l=q.toLowerCase();
+  for(const[k,v]of Object.entries(KB)) if(l.includes(k))return v;
+  return{a:`I have partial records matching your query. My knowledge base holds ${document.getElementById('sFacts').textContent} indexed facts about Barrow-in-Furness. Confidence is moderate — run a targeted research pass on this topic from the Brain page for fuller results.`,s:'General index · confidence: moderate'};
+}
+const QQ=['Tell me about 196 Marsh Street','Who was Sir James Ramsden?','History of Furness Abbey','When was Barrow founded?','HMS Dreadnought launch','Barrow docks history'];
+function buildQuick(){
+  const w=document.getElementById('quickWrap'); if(!w)return;
+  QQ.forEach(q=>{
+    const b=document.createElement('button'); b.className='qbtn'; b.textContent=q;
+    b.onclick=()=>{document.getElementById('chatIn').value=q;sendChat();};
+    w.appendChild(b);
+  });
+}
+buildQuick();
+function addChat(role,html,src=''){
+  const w=document.getElementById('chatWin'); if(!w)return;
+  const d=document.createElement('div'); d.className='cmsg '+(role==='user'?'u':'a');
+  d.innerHTML=`<div class="cava">${role==='user'?'👤':'🧠'}</div><div><div class="cbub">${html}</div>${src?`<div class="csrc">SOURCE: ${src}</div>`:''}</div>`;
+  w.appendChild(d); w.scrollTop=w.scrollHeight;
+}
+function sendChat(){
+  const inp=document.getElementById('chatIn'), q=inp.value.trim(); if(!q)return;
+  inp.value=''; addChat('user',q);
+  // typing indicator
+  const w=document.getElementById('chatWin');
+  const td=document.createElement('div'); td.className='cmsg a'; td.id='typing';
+  td.innerHTML='<div class="cava">🧠</div><div class="cbub"><div class="typing"><span></span><span></span><span></span></div></div>';
+  w.appendChild(td); w.scrollTop=w.scrollHeight;
+  setTimeout(()=>{
+    const t=document.getElementById('typing'); if(t)t.remove();
+    const r=getAns(q); addChat('assistant',r.a,r.s);
+  },800+Math.random()*600);
+}
+
+// ── SETTINGS ──
+function saveSettings(){
+  const k=document.getElementById('anthropicKey')?.value;
+  if(k) localStorage.setItem('bq_api_key',k);
+  toast('Settings saved ✓');
+}
+function toast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
+}
+</script>
+</body>
+</html>
