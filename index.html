@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BARROW QUEST — CONTROL PANEL</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #131720;
+    --card:      #191e2b;
+    --border:    #1e2840;
+    --teal:      #00d4c8;
+    --teal-dim:  #00897f;
+    --purple:    #8b5cf6;
+    --purple-dim:#5b21b6;
+    --amber:     #f59e0b;
+    --red:       #ef4444;
+    --green:     #22c55e;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --font-head: 'Exo 2', sans-serif;
+    --font-mono: 'Share Tech Mono', monospace;
+    --font-ui:   'Rajdhani', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    z-index: 100;
+  }
+
+  .logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-title {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--teal);
+    text-transform: uppercase;
+  }
+  .logo-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  .nav { flex: 1; padding: 12px 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+  .nav-item.active {
+    color: var(--teal);
+    border-left-color: var(--teal);
+    background: rgba(0,212,200,0.06);
+  }
+  .nav-item .icon { font-size: 18px; width: 22px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .pulse-dot {
+    display: inline-block; width: 7px; height: 7px;
+    background: var(--green); border-radius: 50%;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    margin-left: 220px;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .page-title {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .topbar-right {
+    display: flex; align-items: center; gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .time-display { color: var(--teal); }
+
+  .content {
+    padding: 28px;
+    flex: 1;
+  }
+
+  /* ── PAGE SECTIONS ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--teal), transparent);
+    opacity: 0.4;
+  }
+  .card-title {
+    font-family: var(--font-head);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; }
+  .col-span-2 { grid-column: span 2; }
+  .col-span-3 { grid-column: span 3; }
+
+  /* ── STAT NUMBERS ── */
+  .stat-big {
+    font-family: var(--font-head);
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .stat-delta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-top: 6px;
+  }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    border: none; cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+  .btn-teal { background: var(--teal); color: #0a1a19; }
+  .btn-teal:hover { background: #00fff5; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,212,200,0.4); }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-purple:hover { background: #a78bfa; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(139,92,246,0.4); }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-red:hover { background: #f87171; }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+  .btn-lg { padding: 14px 32px; font-size: 16px; }
+
+  /* ── STATUS BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .badge-green { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge-red { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .badge-amber { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-teal { background: rgba(0,212,200,0.1); color: var(--teal); border: 1px solid rgba(0,212,200,0.25); }
+  .badge .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* ── LIVE LOG FEED ── */
+  .log-feed {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    height: 260px;
+    overflow-y: auto;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .log-feed::-webkit-scrollbar { width: 4px; }
+  .log-feed::-webkit-scrollbar-track { background: transparent; }
+  .log-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .log-line { display: flex; gap: 10px; }
+  .log-time { color: var(--muted); min-width: 72px; }
+  .log-bot { min-width: 80px; }
+  .log-bot.research { color: var(--teal); }
+  .log-bot.history { color: var(--purple); }
+  .log-bot.safety { color: var(--amber); }
+  .log-bot.local { color: #60a5fa; }
+  .log-bot.planning { color: #f472b6; }
+  .log-bot.family { color: #4ade80; }
+  .log-bot.social { color: #fb923c; }
+  .log-msg { color: #94a3b8; }
+  .log-msg.highlight { color: var(--text); }
+
+  /* ── PROGRESS BARS ── */
+  .progress-wrap { margin-bottom: 14px; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; margin-bottom: 5px;
+  }
+  .progress-label span:first-child { color: var(--text); font-weight: 600; }
+  .progress-label span:last-child { font-family: var(--font-mono); color: var(--teal); }
+  .progress-bar {
+    height: 5px; background: var(--border); border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal-dim), var(--teal));
+    border-radius: 3px;
+    transition: width 1s ease;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute; right: 0; top: -2px;
+    width: 9px; height: 9px;
+    background: var(--teal);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--teal);
+  }
+
+  /* ── BOT CARDS ── */
+  .bot-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 12px;
+    transition: border-color 0.2s;
+  }
+  .bot-card.active-bot { border-color: var(--teal-dim); }
+  .bot-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .bot-name-wrap { display: flex; align-items: center; gap: 10px; }
+  .bot-avatar {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: rgba(0,212,200,0.08);
+    border: 1px solid var(--border);
+  }
+  .bot-name {
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+  }
+  .bot-role { font-size: 11px; color: var(--muted); }
+  .bot-status-text {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+  }
+  .bot-actions { display: flex; gap: 6px; }
+
+  /* ── CHAT ── */
+  .chat-window {
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    height: 380px;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .chat-msg { display: flex; gap: 12px; max-width: 85%; }
+  .chat-msg.user { margin-left: auto; flex-direction: row-reverse; }
+  .chat-avatar {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .chat-bubble {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    position: relative;
+  }
+  .chat-msg.assistant .chat-bubble {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .chat-msg.user .chat-bubble {
+    background: rgba(0,212,200,0.12);
+    border: 1px solid rgba(0,212,200,0.25);
+    color: var(--text);
+  }
+  .chat-source {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    padding: 4px 8px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .chat-input-row {
+    display: flex; gap: 10px; margin-top: 14px;
+  }
+  .chat-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chat-input:focus { border-color: var(--teal); }
+  .chat-input::placeholder { color: var(--muted); }
+
+  /* ── GRAPH (SVG bars) ── */
+  .graph-bars {
+    display: flex; align-items: flex-end; gap: 5px;
+    height: 80px; padding: 0 4px;
+  }
+  .graph-bar {
+    flex: 1;
+    background: linear-gradient(180deg, var(--teal), var(--teal-dim));
+    border-radius: 3px 3px 0 0;
+    min-height: 4px;
+    transition: height 1s ease;
+    position: relative;
+    cursor: pointer;
+  }
+  .graph-bar:hover { background: linear-gradient(180deg, #00fff5, var(--teal)); }
+  .graph-bar.purple { background: linear-gradient(180deg, var(--purple), var(--purple-dim)); }
+  .graph-labels {
+    display: flex; gap: 5px;
+    padding: 4px 4px 0;
+  }
+  .graph-label {
+    flex: 1;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* ── MEMORY WEB (canvas) ── */
+  #memoryCanvas { width: 100%; border-radius: 6px; cursor: crosshair; }
+
+  /* ── SETTINGS FORM ── */
+  .field-group { margin-bottom: 20px; }
+  .field-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted);
+    margin-bottom: 7px;
+  }
+  .field-input {
+    width: 100%;
+    background: #0a0c12;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field-input:focus { border-color: var(--teal); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 16px;
+    background: var(--teal);
+    border-radius: 2px;
+  }
+
+  /* ── MONEY CARDS ── */
+  .money-big {
+    font-family: var(--font-head);
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--teal);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  /* ── RESEARCH CONTROL ── */
+  .research-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ── TYPING INDICATOR ── */
+  .typing {
+    display: flex; gap: 4px; align-items: center;
+    padding: 10px 14px;
+  }
+  .typing span {
+    width: 6px; height: 6px;
+    background: var(--muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+  /* ── RESPONSIVE STACK ── */
+  @media (max-width: 1100px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 800px) {
+    .sidebar { width: 60px; }
+    .logo-title, .logo-sub, .nav-item span { display: none; }
+    .nav-item { justify-content: center; padding: 14px; }
+    .main { margin-left: 60px; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .col-span-2, .col-span-3 { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-title">BQ Control</div>
+    <div class="logo-sub">MISSION OPS v1.0</div>
+  </div>
+  <div class="nav">
+    <div class="nav-item active" data-page="brain" onclick="switchPage('brain', this)">
+      <span class="icon">🧠</span><span>Brain Status</span>
+    </div>
+    <div class="nav-item" data-page="bots" onclick="switchPage('bots', this)">
+      <span class="icon">🤖</span><span>Bots Control</span>
+    </div>
+    <div class="nav-item" data-page="money" onclick="switchPage('money', this)">
+      <span class="icon">💰</span><span>Earnings</span>
+    </div>
+    <div class="nav-item" data-page="test" onclick="switchPage('test', this)">
+      <span class="icon">❓</span><span>Test It</span>
+    </div>
+    <div class="nav-item" data-page="settings" onclick="switchPage('settings', this)">
+      <span class="icon">⚙️</span><span>Settings</span>
+    </div>
+  </div>
+  <div class="sidebar-footer">
+    <span class="pulse-dot"></span>SYSTEM LIVE
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Brain Status</div>
+    <div class="topbar-right">
+      <span>BARROW-IN-FURNESS INTELLIGENCE SYSTEM</span>
+      <span class="time-display" id="clock">--:--:--</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ PAGE: BRAIN ══ -->
+    <div class="page active" id="page-brain">
+
+      <!-- Top stat row -->
+      <div class="grid-4" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">Total Facts</div>
+          <div class="stat-big" style="color:var(--teal)" id="statFacts">2,847</div>
+          <div class="stat-label">knowledge records</div>
+          <div class="stat-delta up" id="statFactsDelta">▲ +34 today</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Places Mapped</div>
+          <div class="stat-big" style="color:var(--purple)" id="statPlaces">312</div>
+          <div class="stat-label">locations indexed</div>
+          <div class="stat-delta up">▲ +7 today</div>
+        </div>
+        <div class="card">
+          <div class="card-title">People Records</div>
+          <div class="stat-big" style="color:var(--amber)" id="statPeople">891</div>
+          <div class="stat-label">historical figures</div>
+          <div class="stat-delta up">▲ +12 today</div>
+        </div>
+        <div class="card">
+          <div class="card-title">History Events</div>
+          <div class="stat-big" style="color:#60a5fa" id="statEvents">1,644</div>
+          <div class="stat-label">timeline entries</div>
+          <div class="stat-delta up">▲ +5 today</div>
+        </div>
+      </div>
+
+      <!-- Research controls + live feed -->
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">Research Control</div>
+            <div class="badge badge-green" id="brainStatusBadge"><span class="dot"></span> ACTIVE</div>
+          </div>
+          <div class="research-buttons" style="margin-bottom:16px">
+            <button class="btn btn-teal btn-lg" onclick="startResearch()">▶ Start Research</button>
+            <button class="btn btn-outline" onclick="stopResearch()">⏹ Stop</button>
+            <button class="btn btn-purple" onclick="researchForever()">∞ Forever Mode</button>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Current crawl depth</span><span id="crawlDepth">67%</span></div>
+            <div class="progress-bar"><div class="progress-fill" id="crawlBar" style="width:67%"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Memory usage</span><span>34 MB</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:34%"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Indexing queue</span><span id="queueCount">14 pending</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">Live Learning Feed</div>
+            <button class="btn btn-outline btn-sm" onclick="clearLog()">Clear</button>
+          </div>
+          <div class="log-feed" id="liveFeed"></div>
+        </div>
+      </div>
+
+      <!-- Memory web -->
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">Memory Web — Click a node to explore</div>
+          <div style="display:flex;gap:8px">
+            <span class="badge badge-teal">● Places</span>
+            <span class="badge badge-amber" style="background:rgba(245,158,11,0.1);color:var(--amber);border-color:rgba(245,158,11,0.25)">● People</span>
+            <span class="badge" style="background:rgba(96,165,250,0.1);color:#60a5fa;border-color:rgba(96,165,250,0.25)">● Events</span>
+          </div>
+        </div>
+        <canvas id="memoryCanvas" height="300"></canvas>
+        <div id="nodeInfo" style="margin-top:12px;font-family:var(--font-mono);font-size:12px;color:var(--muted);min-height:20px"></div>
+      </div>
+
+    </div><!-- /page-brain -->
+
+
+    <!-- ══ PAGE: BOTS ══ -->
+    <div class="page" id="page-bots">
+
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="card-title">Fleet Overview</div>
+          <div style="display:flex;gap:20px">
+            <div><div class="stat-big" style="font-size:32px;color:var(--green)" id="botsOnline">5</div><div class="stat-label">Online</div></div>
+            <div><div class="stat-big" style="font-size:32px;color:var(--red)" id="botsOffline">2</div><div class="stat-label">Offline</div></div>
+            <div><div class="stat-big" style="font-size:32px;color:var(--amber)">847</div><div class="stat-label">Tasks Today</div></div>
+            <div><div class="stat-big" style="font-size:32px;color:var(--teal)">£142</div><div class="stat-label">Earned Today</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Today's Bot Activity Log</div>
+          <div class="log-feed" id="botActivityLog" style="height:120px"></div>
+        </div>
+      </div>
+
+      <div class="grid-3" id="botGrid"></div>
+
+    </div><!-- /page-bots -->
+
+
+    <!-- ══ PAGE: MONEY ══ -->
+    <div class="page" id="page-money">
+
+      <div class="grid-4" style="margin-bottom:20px">
+        <div class="card col-span-2">
+          <div class="card-title">Total Earned — All Time</div>
+          <div class="money-big">£4,217.50</div>
+          <div class="stat-label">since launch · 14 Apr 2025</div>
+        </div>
+        <div class="card">
+          <div class="card-title">This Month</div>
+          <div class="stat-big" style="color:var(--teal);font-size:32px">£842.00</div>
+          <div class="stat-delta up">▲ 14% vs last month</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Today</div>
+          <div class="stat-big" style="color:var(--green);font-size:32px">£142.50</div>
+          <div class="stat-delta up">▲ Best day this week</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px">Weekly Revenue</div>
+          <div class="graph-bars" id="weeklyGraph"></div>
+          <div class="graph-labels" id="weeklyLabels"></div>
+        </div>
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px">Revenue Breakdown</div>
+          <div id="revenueBreakdown"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:16px">All Revenue Streams</div>
+        <div id="revenueTable"></div>
+      </div>
+
+    </div><!-- /page-money -->
+
+
+    <!-- ══ PAGE: TEST ══ -->
+    <div class="page" id="page-test">
+      <div class="grid-2">
+        <div class="card col-span-2">
+          <div class="section-title" style="margin-bottom:4px">Test The Brain</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:16px">Ask anything about Barrow — streets, history, people, buildings, businesses.</div>
+          <div class="chat-window" id="chatWindow">
+            <div class="chat-msg assistant">
+              <div class="chat-avatar">🧠</div>
+              <div>
+                <div class="chat-bubble">Hello Khyl. I'm the Barrow Intelligence Brain. Ask me about any address, person, place or historical event in Barrow-in-Furness — I'll tell you everything I know and show you exactly where the information came from.</div>
+                <div class="chat-source">SOURCE: system · confidence 100%</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" id="chatInput" placeholder="e.g. Tell me about 196 Marsh Street..." onkeydown="if(event.key==='Enter')sendChat()"/>
+            <button class="btn btn-teal" onclick="sendChat()">▶ Ask</button>
+          </div>
+          <!-- Quick prompts -->
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px" id="quickPrompts"></div>
+        </div>
+      </div>
+    </div><!-- /page-test -->
+
+
+    <!-- ══ PAGE: SETTINGS ══ -->
+    <div class="page" id="page-settings">
+
+      <div class="grid-2">
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">API Keys</div>
+          <div class="field-group">
+            <div class="field-label">Anthropic API Key (Old Tom / Brain)</div>
+            <input class="field-input" type="password" placeholder="sk-ant-..." id="anthropicKey"/>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Supabase URL</div>
+            <input class="field-input" type="text" placeholder="https://xxx.supabase.co" id="supabaseUrl"/>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Supabase Anon Key</div>
+            <input class="field-input" type="password" placeholder="eyJ..." id="supabaseKey"/>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Firebase Config JSON</div>
+            <textarea class="field-input" rows="3" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
+          </div>
+          <button class="btn btn-teal" onclick="saveSettings()">💾 Save Keys</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">Affiliate & Earnings</div>
+          <div class="field-row">
+            <div class="field-group">
+              <div class="field-label">PayPal Email</div>
+              <input class="field-input" type="email" placeholder="your@email.com"/>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Stripe Secret Key</div>
+              <input class="field-input" type="password" placeholder="sk_live_..."/>
+            </div>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Amazon Affiliate ID</div>
+            <input class="field-input" type="text" placeholder="barrowquest-21"/>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Google AdSense Publisher ID</div>
+            <input class="field-input" type="text" placeholder="pub-xxxxxxxxxxxxxxxx"/>
+          </div>
+          <div class="divider"></div>
+          <div class="section-title" style="margin-bottom:18px">Social Accounts</div>
+          <div class="field-row">
+            <div class="field-group">
+              <div class="field-label">Twitter/X Handle</div>
+              <input class="field-input" type="text" placeholder="@barrowquest"/>
+            </div>
+            <div class="field-group">
+              <div class="field-label">Facebook Page ID</div>
+              <input class="field-input" type="text" placeholder="barrowquest"/>
+            </div>
+          </div>
+          <button class="btn btn-purple" style="margin-top:8px" onclick="saveSettings()">💾 Save Settings</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">Research Settings</div>
+          <div class="field-group">
+            <div class="field-label">Crawl Speed (requests/minute)</div>
+            <input class="field-input" type="number" value="30" min="1" max="120"/>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Max Memory (MB)</div>
+            <input class="field-input" type="number" value="512" min="64" max="4096"/>
+          </div>
+          <div class="field-group">
+            <div class="field-label">Auto-research on startup</div>
+            <select class="field-input">
+              <option>Yes — resume automatically</option>
+              <option>No — wait for manual start</option>
+            </select>
+          </div>
+          <button class="btn btn-outline" onclick="saveSettings()">Apply</button>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:18px">System Info</div>
+          <div style="font-family:var(--font-mono);font-size:12px;line-height:2;color:var(--muted)">
+            <div>Dashboard Version: <span style="color:var(--teal)">1.0.0</span></div>
+            <div>Node.js: <span style="color:var(--text)">v20.11.0</span></div>
+            <div>Supabase SDK: <span style="color:var(--text)">2.x</span></div>
+            <div>Brain Last Trained: <span style="color:var(--text)">Today 09:14</span></div>
+            <div>Total DB size: <span style="color:var(--text)">247 MB</span></div>
+            <div>Uptime: <span style="color:var(--green)" id="uptimeDisplay">00:00:00</span></div>
+          </div>
+          <div class="divider"></div>
+          <button class="btn btn-red btn-sm" onclick="if(confirm('Reset ALL data?'))alert('Reset aborted — implement this in your backend.')">⚠ Factory Reset</button>
+        </div>
+
+      </div>
+    </div><!-- /page-settings -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// uptime
+let startTime = Date.now();
+setInterval(() => {
+  const s = Math.floor((Date.now()-startTime)/1000);
+  const h = String(Math.floor(s/3600)).padStart(2,'0');
+  const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  const el = document.getElementById('uptimeDisplay');
+  if(el) el.textContent = `${h}:${m}:${ss}`;
+}, 1000);
+
+// ══════════════════════════════════════════════
+// PAGE SWITCHING
+// ══════════════════════════════════════════════
+const pageTitles = {
+  brain:'Brain Status', bots:'Bots Control Room',
+  money:'Money & Earnings', test:'Test It', settings:'Settings'
+};
+function switchPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('pageTitle').textContent = pageTitles[name];
+  if(name==='money') buildMoneyPage();
+}
+
+// ══════════════════════════════════════════════
+// LIVE FEED
+// ══════════════════════════════════════════════
+const feedMessages = [
+  {bot:'RESEARCH', cls:'research', msgs:['Crawling Barrow Council archive…','Found: Devonshire Dock Hall, 1986','Indexing: Vickers shipyard workers list 1942','New fact stored: Buccleuch Dock construction date 1847','Cross-referencing: Barrow Island inhabitants 1901']},
+  {bot:'HISTORY',  cls:'history',  msgs:['Verifying date: HMS Dreadnought launch 1906','Linking person record: Sir James Ramsden','Geocoding: Old Market Street historical boundary','Matched photo archive: Barrow docks 1920s','Source confidence updated: 94%']},
+  {bot:'LOCAL',    cls:'local',    msgs:['Business listing updated: Furness Railway pub','New address record: 12 Abbey Road','Checking current opening hours via web…','Postcode mapped: LA14 2LD → Abbey quarter']},
+  {bot:'SAFETY',   cls:'safety',   msgs:['Content scan complete — no flags','Moderation pass: 47 new records OK','Age-appropriate filter: applied to quiz content']},
+  {bot:'PLANNING', cls:'planning', msgs:['Quest route optimised: 6-stop walk, 2.1km','Event detected: Barrow AFC match Sat 14:00','Added seasonal flag: summer school holidays']},
+  {bot:'FAMILY',   cls:'family',   msgs:['Parent alert: 2 children active','Family trail updated: Abbey ruins route','Age group content: 8-12 batch processed']},
+  {bot:'SOCIAL',   cls:'social',   msgs:['Facebook post queued: Barrow history fact','Instagram caption generated','Affiliate link embedded: Cumbria tourism']},
+];
+
+let feedRunning = false;
+let feedInterval = null;
+
+function addFeedLine(bot, cls, msg) {
+  const feed = document.getElementById('liveFeed');
+  if(!feed) return;
+  const now = new Date();
+  const t = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${t}</span><span class="log-bot ${cls}">[${bot}]</span><span class="log-msg highlight">${msg}</span>`;
+  feed.appendChild(line);
+  feed.scrollTop = feed.scrollHeight;
+  // also add to bot activity log
+  const bal = document.getElementById('botActivityLog');
+  if(bal) {
+    const l2 = line.cloneNode(true);
+    bal.appendChild(l2);
+    bal.scrollTop = bal.scrollHeight;
+  }
+}
+
+function startFeed() {
+  if(feedRunning) return;
+  feedRunning = true;
+  let i = 0;
+  feedInterval = setInterval(() => {
+    const group = feedMessages[Math.floor(Math.random()*feedMessages.length)];
+    const msg = group.msgs[Math.floor(Math.random()*group.msgs.length)];
+    addFeedLine(group.bot, group.cls, msg);
+    // increment counters
+    const el = document.getElementById('statFacts');
+    if(el && Math.random()>0.6) el.textContent = (parseInt(el.textContent.replace(',',''))+1).toLocaleString();
+  }, 1800);
+}
+
+function stopFeed() {
+  feedRunning = false;
+  clearInterval(feedInterval);
+}
+
+function clearLog() {
+  const feed = document.getElementById('liveFeed');
+  if(feed) feed.innerHTML = '';
+}
+
+// Research buttons
+function startResearch() {
+  document.getElementById('brainStatusBadge').innerHTML = '<span class="dot"></span> ACTIVE';
+  document.getElementById('brainStatusBadge').className = 'badge badge-green';
+  startFeed();
+  addFeedLine('SYSTEM','research','▶ Research started by operator');
+}
+function stopResearch() {
+  document.getElementById('brainStatusBadge').innerHTML = '<span class="dot"></span> PAUSED';
+  document.getElementById('brainStatusBadge').className = 'badge badge-amber';
+  stopFeed();
+  addFeedLine('SYSTEM','safety','⏹ Research paused by operator');
+}
+function researchForever() {
+  document.getElementById('brainStatusBadge').innerHTML = '<span class="dot"></span> ∞ FOREVER';
+  document.getElementById('brainStatusBadge').className = 'badge badge-teal';
+  startFeed();
+  addFeedLine('SYSTEM','research','∞ Forever mode activated — continuous learning enabled');
+}
+
+// Auto-start feed after short delay
+setTimeout(startFeed, 800);
+
+// ══════════════════════════════════════════════
+// MEMORY WEB (canvas)
+// ══════════════════════════════════════════════
+const nodes = [
+  {id:0, label:'Barrow', x:0.5, y:0.5, r:22, color:'#00d4c8', type:'place', facts:'Central hub — 2,847 total facts'},
+  {id:1, label:'Vickers', x:0.25, y:0.2, r:16, color:'#00d4c8', type:'place', facts:'Vickers Shipyard — 312 records'},
+  {id:2, label:'Abbey', x:0.75, y:0.2, r:15, color:'#00d4c8', type:'place', facts:'Furness Abbey — 204 records'},
+  {id:3, label:'Docks', x:0.15, y:0.55, r:14, color:'#00d4c8', type:'place', facts:'Barrow Docks — 178 records'},
+  {id:4, label:'Ramsden', x:0.8, y:0.6, r:13, color:'#f59e0b', type:'person', facts:'Sir James Ramsden — 89 facts'},
+  {id:5, label:'1906', x:0.35, y:0.8, r:12, color:'#60a5fa', type:'event', facts:'HMS Dreadnought launch — 67 refs'},
+  {id:6, label:'Market St', x:0.65, y:0.82, r:11, color:'#00d4c8', type:'place', facts:'Old Market Street — 54 records'},
+  {id:7, label:'WW2', x:0.12, y:0.3, r:13, color:'#60a5fa', type:'event', facts:'WWII production records — 143 facts'},
+  {id:8, label:'Schneider', x:0.88, y:0.38, r:10, color:'#f59e0b', type:'person', facts:'Schneider family — 44 facts'},
+  {id:9, label:'Barrow Is.', x:0.5, y:0.15, r:12, color:'#00d4c8', type:'place', facts:'Barrow Island — 97 records'},
+  {id:10, label:'1847', x:0.28, y:0.68, r:10, color:'#60a5fa', type:'event', facts:'Town founding events — 55 refs'},
+];
+const edges = [[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[0,9],[0,10],[1,7],[1,5],[2,8],[3,10],[4,1],[4,9],[5,1],[7,3],[9,1]];
+
+let canvas, ctx, W, H;
+
+function initCanvas() {
+  canvas = document.getElementById('memoryCanvas');
+  if(!canvas) return;
+  W = canvas.offsetWidth;
+  H = 300;
+  canvas.width = W;
+  canvas.height = H;
+  ctx = canvas.getContext('2d');
+  drawWeb();
+  canvas.addEventListener('click', handleCanvasClick);
+  canvas.addEventListener('mousemove', handleCanvasHover);
+}
+
+function nodePos(n) { return {x: n.x*W, y: n.y*H}; }
+
+function drawWeb() {
+  if(!ctx) return;
+  ctx.clearRect(0,0,W,H);
+  // background
+  ctx.fillStyle = '#0a0c12';
+  ctx.fillRect(0,0,W,H);
+  // edges
+  edges.forEach(([a,b]) => {
+    const pa = nodePos(nodes[a]), pb = nodePos(nodes[b]);
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.strokeStyle = 'rgba(0,212,200,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+  // nodes
+  nodes.forEach(n => {
+    const p = nodePos(n);
+    // glow
+    const grd = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,n.r*2.5);
+    grd.addColorStop(0, n.color+'40');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.arc(p.x,p.y,n.r*2.5,0,Math.PI*2); ctx.fill();
+    // circle
+    ctx.beginPath(); ctx.arc(p.x,p.y,n.r,0,Math.PI*2);
+    ctx.fillStyle = n.color+'22';
+    ctx.fill();
+    ctx.strokeStyle = n.color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // label
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = `500 ${Math.max(9,n.r*0.7)}px 'Share Tech Mono'`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, p.x, p.y);
+  });
+}
+
+function handleCanvasClick(e) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX-rect.left)*(W/rect.width);
+  const my = (e.clientY-rect.top)*(H/rect.height);
+  nodes.forEach(n => {
+    const p = nodePos(n);
+    if(Math.hypot(mx-p.x, my-p.y)<n.r+4) {
+      document.getElementById('nodeInfo').innerHTML =
+        `<span style="color:var(--teal)">▶ ${n.label}</span>&nbsp;&nbsp;${n.facts}`;
+    }
+  });
+}
+
+function handleCanvasHover(e) {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX-rect.left)*(W/rect.width);
+  const my = (e.clientY-rect.top)*(H/rect.height);
+  let hit = false;
+  nodes.forEach(n=>{
+    const p = nodePos(n);
+    if(Math.hypot(mx-p.x,my-p.y)<n.r+4) hit=true;
+  });
+  canvas.style.cursor = hit ? 'pointer' : 'crosshair';
+}
+
+// Animate a subtle pulse on nodes
+let pulsePhase = 0;
+function animateWeb() {
+  if(!ctx) return;
+  pulsePhase += 0.04;
+  drawWeb();
+  // pulse the central node
+  const p = nodePos(nodes[0]);
+  const r = nodes[0].r + Math.sin(pulsePhase)*3;
+  ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+  ctx.strokeStyle = `rgba(0,212,200,${0.3+0.2*Math.sin(pulsePhase)})`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  requestAnimationFrame(animateWeb);
+}
+
+window.addEventListener('load', () => {
+  setTimeout(()=>{ initCanvas(); animateWeb(); }, 200);
+});
+window.addEventListener('resize', () => {
+  if(canvas) { W = canvas.offsetWidth; canvas.width = W; }
+});
+
+// ══════════════════════════════════════════════
+// BOTS
+// ══════════════════════════════════════════════
+const BOTS = [
+  {name:'Safety Bot',    key:'safety',   icon:'🛡️', role:'Content moderation', status:'online',  task:'Running daily content scan…'},
+  {name:'History Bot',   key:'history',  icon:'📜', role:'Historical research', status:'online',  task:'Cross-referencing 1901 census…'},
+  {name:'LocalExpert',   key:'local',    icon:'📍', role:'Places & addresses',  status:'online',  task:'Geocoding new postcodes…'},
+  {name:'Planning Bot',  key:'planning', icon:'🗺️', role:'Quest routes',        status:'offline', task:'Idle'},
+  {name:'Research Bot',  key:'research', icon:'🔬', role:'Web crawler',         status:'online',  task:'Crawling council archives…'},
+  {name:'Family Bot',    key:'family',   icon:'👨‍👩‍👧', role:'Family content',     status:'online',  task:'Processing age-group batches…'},
+  {name:'Social Bot',    key:'social',   icon:'📣', role:'Social media',        status:'offline', task:'Idle'},
+];
+
+function buildBots() {
+  const grid = document.getElementById('botGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  BOTS.forEach((bot, i) => {
+    const on = bot.status==='online';
+    const div = document.createElement('div');
+    div.className = 'bot-card' + (on ? ' active-bot' : '');
+    div.id = 'bot-'+bot.key;
+    div.innerHTML = `
+      <div class="bot-card-header">
+        <div class="bot-name-wrap">
+          <div class="bot-avatar">${bot.icon}</div>
+          <div>
+            <div class="bot-name">${bot.name}</div>
+            <div class="bot-role">${bot.role}</div>
+          </div>
+        </div>
+        <div class="badge ${on?'badge-green':'badge-red'}" id="badge-${bot.key}">
+          <span class="dot"></span>${on?'ONLINE':'OFFLINE'}
+        </div>
+      </div>
+      <div class="bot-status-text" id="task-${bot.key}">⚡ ${bot.task}</div>
+      <div class="bot-actions">
+        <button class="btn btn-teal btn-sm" onclick="botAction('${bot.key}','start')">▶ Start</button>
+        <button class="btn btn-outline btn-sm" onclick="botAction('${bot.key}','stop')">⏹</button>
+        <button class="btn btn-purple btn-sm" onclick="botAction('${bot.key}','restart')">↺ Restart</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+buildBots();
+
+function botAction(key, action) {
+  const badge = document.getElementById('badge-'+key);
+  const task = document.getElementById('task-'+key);
+  const card = document.getElementById('bot-'+key);
+  if(!badge) return;
+  if(action==='start') {
+    badge.innerHTML = '<span class="dot"></span>ONLINE';
+    badge.className = 'badge badge-green';
+    if(task) task.textContent = '⚡ Resuming tasks…';
+    if(card) card.classList.add('active-bot');
+    document.getElementById('botsOnline').textContent = countOnline()+1;
+    addFeedLine(key.toUpperCase(), key, `Bot started by operator`);
+  } else if(action==='stop') {
+    badge.innerHTML = '<span class="dot"></span>OFFLINE';
+    badge.className = 'badge badge-red';
+    if(task) task.textContent = '— Idle';
+    if(card) card.classList.remove('active-bot');
+    addFeedLine(key.toUpperCase(), key, `Bot stopped by operator`);
+  } else if(action==='restart') {
+    badge.innerHTML = '<span class="dot"></span>RESTARTING';
+    badge.className = 'badge badge-amber';
+    if(task) task.textContent = '⏳ Restarting…';
+    setTimeout(() => {
+      badge.innerHTML = '<span class="dot"></span>ONLINE';
+      badge.className = 'badge badge-green';
+      if(task) task.textContent = '⚡ Running…';
+      if(card) card.classList.add('active-bot');
+    }, 2000);
+    addFeedLine(key.toUpperCase(), key, `Bot restarted by operator`);
+  }
+}
+
+function countOnline() {
+  return document.querySelectorAll('.badge-green').length;
+}
+
+// ══════════════════════════════════════════════
+// MONEY PAGE
+// ══════════════════════════════════════════════
+const weekDays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const weekData = [68, 95, 112, 87, 134, 142, 128];
+const revenueStreams = [
+  {name:'Business Listings', amount:1840.00, percent:43.6, delta:'+12%', color:'var(--teal)'},
+  {name:'Affiliate Links',   amount:1220.50, percent:28.9, delta:'+8%',  color:'var(--purple)'},
+  {name:'Subscriptions',     amount:780.00,  percent:18.5, delta:'+22%', color:'var(--amber)'},
+  {name:'Council Licenses',  amount:377.00,  percent:8.9,  delta:'NEW',  color:'#60a5fa'},
+];
+
+function buildMoneyPage() {
+  // weekly graph
+  const gbar = document.getElementById('weeklyGraph');
+  const glab = document.getElementById('weeklyLabels');
+  if(gbar && !gbar.children.length) {
+    const max = Math.max(...weekData);
+    weekData.forEach((v,i) => {
+      const bar = document.createElement('div');
+      bar.className = 'graph-bar' + (i===5?' purple':'');
+      bar.style.height = (v/max*75+5)+'px';
+      bar.title = `£${v} — ${weekDays[i]}`;
+      gbar.appendChild(bar);
+      const lbl = document.createElement('div');
+      lbl.className = 'graph-label';
+      lbl.textContent = weekDays[i];
+      glab.appendChild(lbl);
+    });
+  }
+  // breakdown
+  const rb = document.getElementById('revenueBreakdown');
+  if(rb && !rb.children.length) {
+    revenueStreams.forEach(s => {
+      rb.innerHTML += `
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>${s.name}</span>
+            <span style="color:${s.color}">£${s.amount.toFixed(2)}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${s.percent}%;background:linear-gradient(90deg,${s.color}88,${s.color})"></div>
+          </div>
+        </div>`;
+    });
+  }
+  // table
+  const rt = document.getElementById('revenueTable');
+  if(rt && !rt.children.length) {
+    rt.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border)">
+            ${['Stream','All-time','This Month','Today','Growth','Status'].map(h=>`<th style="text-align:left;padding:8px 12px;color:var(--muted);font-family:var(--font-mono);font-size:11px;letter-spacing:1px">${h}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${revenueStreams.map((s,i)=>`
+            <tr style="border-bottom:1px solid var(--border)${i===revenueStreams.length-1?';border-bottom:none':''}">
+              <td style="padding:12px;font-weight:600;color:${s.color}">${s.name}</td>
+              <td style="padding:12px;font-family:var(--font-mono)">£${s.amount.toFixed(2)}</td>
+              <td style="padding:12px;font-family:var(--font-mono)">£${(s.amount*0.2).toFixed(2)}</td>
+              <td style="padding:12px;font-family:var(--font-mono)">£${(s.amount*0.034).toFixed(2)}</td>
+              <td style="padding:12px"><span class="badge badge-green">${s.delta}</span></td>
+              <td style="padding:12px"><span class="badge badge-teal"><span class="dot"></span>Live</span></td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+}
+buildMoneyPage();
+
+// ══════════════════════════════════════════════
+// CHAT / TEST PAGE
+// ══════════════════════════════════════════════
+const quickQ = [
+  'Tell me about 196 Marsh Street',
+  'Who was Sir James Ramsden?',
+  'History of Furness Abbey',
+  'When was Barrow founded?',
+  'HMS Dreadnought launch',
+  'Barrow docks 1847',
+];
+
+const knowledgeBase = {
+  'marsh street':   {answer:'Marsh Street is one of Barrow\'s oldest residential streets, running through the Barrow Island area. Several workers from the Vickers shipyard lived here in the early 1900s. Census records from 1901 show 12 households at numbers 190-210, primarily ironworkers and their families.', source:'Census 1901 · Local archive ref BRW-042'},
+  'ramsden':        {answer:'Sir James Ramsden (1822–1896) was the first Mayor of Barrow-in-Furness and the driving force behind the town\'s rapid expansion. He served as general manager of the Furness Railway and was instrumental in establishing the steelworks and docks that built the modern town.', source:'Barrow Borough records · DNB biography'},
+  'furness abbey':  {answer:'Furness Abbey was founded in 1123 by Stephen, later King of England. It became one of the wealthiest Cistercian monasteries in northern England before its dissolution in 1537 under Henry VIII. The ruins are now a Scheduled Ancient Monument managed by English Heritage.', source:'English Heritage · Historic England ref 1015736'},
+  'barrow founded': {answer:'Barrow-in-Furness was formally incorporated as a Municipal Borough in 1867, though settlement dates back much earlier. The town\'s rapid industrial growth began around 1846-1847 with the arrival of the Furness Railway, which opened up iron ore transport from the local mines.', source:'Barrow Borough Charter 1867 · Furness Railway history'},
+  'dreadnought':    {answer:'HMS Dreadnought was launched at Vickers Sons & Maxim yard, Barrow, on 10 February 1906. She revolutionised naval warfare and gave her name to an entire class of battleships. Her construction employed over 3,000 Barrow workers and took just 366 days from keel-laying to commissioning.', source:'Vickers shipyard records · Naval History Branch'},
+  'docks':          {answer:'Barrow\'s dock system was constructed between 1847 and 1872. Buccleuch Dock (1847) was the first, followed by Devonshire Dock (1867) and Ramsden Dock (1879). The deep-water facilities made Barrow a major centre for steel exports and later submarine construction.', source:'Port of Barrow historical records · Cumbria Archive'},
+};
+
+function getAnswer(q) {
+  const lower = q.toLowerCase();
+  for(const [key,val] of Object.entries(knowledgeBase)) {
+    if(lower.includes(key)) return val;
+  }
+  return {
+    answer:`I have partial records relating to your query. My knowledge base currently holds 2,847 indexed facts about Barrow-in-Furness. For "${q}" I can cross-reference several overlapping records — confidence is moderate. Consider running a targeted research pass on this topic using the Brain Status page.`,
+    source:`General index · confidence: moderate`
+  };
+}
+
+function buildQuickPrompts() {
+  const wrap = document.getElementById('quickPrompts');
+  if(!wrap) return;
+  quickQ.forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline btn-sm';
+    btn.textContent = q;
+    btn.onclick = () => { document.getElementById('chatInput').value=q; sendChat(); };
+    wrap.appendChild(btn);
+  });
+}
+buildQuickPrompts();
+
+function appendChat(role, html, source='') {
+  const win = document.getElementById('chatWindow');
+  if(!win) return;
+  const div = document.createElement('div');
+  div.className = 'chat-msg '+role;
+  const avatar = role==='user' ? '👤' : '🧠';
+  div.innerHTML = `
+    <div class="chat-avatar">${avatar}</div>
+    <div>
+      <div class="chat-bubble">${html}</div>
+      ${source?`<div class="chat-source">SOURCE: ${source}</div>`:''}
+    </div>`;
+  win.appendChild(div);
+  win.scrollTop = win.scrollHeight;
+}
+
+function showTyping() {
+  const win = document.getElementById('chatWindow');
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="chat-avatar">🧠</div><div class="chat-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  win.appendChild(div);
+  win.scrollTop = win.scrollHeight;
+}
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if(el) el.remove();
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const q = input.value.trim();
+  if(!q) return;
+  input.value = '';
+  appendChat('user', q);
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const r = getAnswer(q);
+    appendChat('assistant', r.answer, r.source);
+  }, 900 + Math.random()*600);
+}
+
+// ══════════════════════════════════════════════
+// SETTINGS
+// ══════════════════════════════════════════════
+function saveSettings() {
+  // In production: POST to your backend or save to localStorage
+  const key = document.getElementById('anthropicKey')?.value;
+  if(key) {
+    localStorage.setItem('bq_anthropic_key', key);
+  }
+  showToast('Settings saved ✓');
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.textContent = msg;
+  toast.style.cssText = `
+    position:fixed;bottom:28px;right:28px;z-index:9999;
+    background:var(--teal);color:#0a1a19;
+    padding:12px 24px;border-radius:6px;
+    font-family:var(--font-ui);font-size:14px;font-weight:700;
+    animation:slideIn 0.2s ease;
+  `;
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(), 2500);
+}
+
+// CSS for toast
+const style = document.createElement('style');
+style.textContent = `@keyframes slideIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>
